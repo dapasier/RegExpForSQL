@@ -1,9 +1,6 @@
 using System;
-//using System.Data;
-//using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Collections;
-//using Microsoft.SqlServer.Server;
 using System.Text.RegularExpressions;
 
 public partial class RegexForSQL
@@ -26,7 +23,7 @@ public partial class RegexForSQL
         {
             return SqlBoolean.Null;
         }
-        
+
         if (pattern.IsNull)
         {
             pattern = String.Empty;
@@ -40,7 +37,7 @@ public partial class RegexForSQL
         try
         {
             bool match = Regex.IsMatch((string)input, (string)pattern, (RegexOptions)(int)options);
-            
+
             return (SqlBoolean)match;
         }
         catch
@@ -79,7 +76,7 @@ public partial class RegexForSQL
             {
                 return (SqlString)match.Groups[groupName.Value].Value;
             }
-            
+
         }
         catch
         {
@@ -87,6 +84,41 @@ public partial class RegexForSQL
         }
 
         return SqlString.Null;
+    }
+
+    [Microsoft.SqlServer.Server.SqlFunction(Name = "RegexMatchCount", IsDeterministic = true, IsPrecise = true)]
+    public static SqlInt32 RegexMatchCount(SqlString input, SqlString pattern, SqlInt32 options)
+    {
+        if (input.IsNull)
+        {
+            return SqlInt32.Null;
+        }
+
+        if (pattern.IsNull)
+        {
+            pattern = String.Empty;
+        }
+
+        if (options.IsNull)
+        {
+            options = 0;
+        }
+
+        try
+        {
+            Match match = Regex.Match((string)input, (string)pattern, (RegexOptions)(int)options);
+            if (match.Success)
+            {
+                return (SqlInt32)match.Captures.Count;
+            }
+
+        }
+        catch
+        {
+            throw;
+        }
+
+        return SqlInt32.Null;
     }
 
     [Microsoft.SqlServer.Server.SqlFunction(Name = "RegexReplace", IsDeterministic = true, IsPrecise = true)]
@@ -116,7 +148,7 @@ public partial class RegexForSQL
         {
             string match = Regex.Replace((string)input, (string)pattern, (string)replacement, (RegexOptions)(int)options);
 
-            return (SqlString)match;            
+            return (SqlString)match;
         }
         catch
         {
@@ -124,7 +156,27 @@ public partial class RegexForSQL
         }
     }
 
-    [Microsoft.SqlServer.Server.SqlFunction(Name = "RegexMatches", IsDeterministic = true, IsPrecise = true, FillRowMethodName = "FillMatches", TableDefinition="idx int, value nvarchar(4000), length int")]
+    [Microsoft.SqlServer.Server.SqlFunction(Name = "RegexEscape", IsDeterministic = true, IsPrecise = true)]
+    public static SqlString RegexEscape(SqlString input)
+    {
+        if (input.IsNull)
+        {
+            return SqlString.Null;
+        }
+
+        try
+        {
+            string escape = Regex.Escape((string)input);
+
+            return (SqlString)escape;
+        }
+        catch
+        {
+            throw;
+        }
+    }
+
+    [Microsoft.SqlServer.Server.SqlFunction(Name = "RegexMatches", IsDeterministic = true, IsPrecise = true, FillRowMethodName = "FillMatches", TableDefinition = "idx int, value nvarchar(4000), length int")]
     public static IEnumerable RegexMatches(SqlString input, SqlString pattern, SqlInt32 options)
     {
         if (pattern.IsNull)
